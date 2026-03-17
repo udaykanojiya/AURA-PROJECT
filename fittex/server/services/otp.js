@@ -35,13 +35,17 @@ const sendOTP = async (phone) => {
       { upsert: true, new: true }
     );
 
+    // Find user to get email
+    const user = await User.findOne({ phone });
+    const email = user?.email || `${phone}@gmail.com`; // Fallback if no email
+
     // Try to send via email
     const transporter = createTransporter();
-    if (transporter) {
+    if (transporter && email) {
       try {
         await transporter.sendMail({
           from: `"FITTEX GYM" <${process.env.EMAIL_USER}>`,
-          to: `${phone}@gmail.com`, // Fallback - ideally use actual email
+          to: email, 
           subject: 'FITTEX GYM - Your OTP Code',
           html: `
             <div style="font-family:Arial,sans-serif;max-width:400px;margin:0 auto;background:#0a0a0a;padding:30px;border-radius:10px;">
