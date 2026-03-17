@@ -85,7 +85,6 @@ function AppContent() {
           {/* Auth Routes */}
           <Route path="/login" element={<OTPLogin setUser={setUser} />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/admin-login" element={<AdminLogin setUser={setUser} />} />
           <Route path="/admin-secret-panel" element={<AdminLogin setUser={setUser} />} />
 
           {/* Admin Routes */}

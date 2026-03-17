@@ -24,7 +24,7 @@ const AdminRegistrations = () => {
       const { data } = await api.get(`/admin/registrations?status=${status}`);
       setRegistrations(data.data || []);
     } catch (err) {
-      if (err.response?.status === 401) navigate('/admin-login');
+      if (err.response?.status === 401) navigate('/admin-secret-panel');
       else toast.error('Failed to load registrations');
     } finally {
       setLoading(false);

@@ -15,7 +15,7 @@ const AdminLiveAttendance = () => {
       const { data: res } = await api.get('/admin/live-attendance');
       setData(res.data);
     } catch (err) {
-      if (err.response?.status === 401) navigate('/admin-login');
+      if (err.response?.status === 401) navigate('/admin-secret-panel');
     } finally {
       setLoading(false);
     }

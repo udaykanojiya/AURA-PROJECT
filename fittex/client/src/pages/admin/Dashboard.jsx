@@ -19,7 +19,7 @@ const AdminDashboard = ({ setUser }) => {
       setStats(data.data);
     } catch (err) {
       if (err.response?.status === 401) {
-        navigate('/admin-login');
+        navigate('/admin-secret-panel');
       } else {
         toast.error('Failed to load dashboard');
       }
@@ -32,9 +32,9 @@ const AdminDashboard = ({ setUser }) => {
     try {
       await api.post('/auth/logout');
       if (setUser) setUser(null);
-      navigate('/admin-login');
+      navigate('/admin-secret-panel');
     } catch (e) {
-      navigate('/admin-login');
+      navigate('/admin-secret-panel');
     }
   };
 
