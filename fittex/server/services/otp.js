@@ -8,13 +8,14 @@ const generateOTP = () => {
 
 // Create email transporter
 const createTransporter = () => {
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS && 
-      process.env.EMAIL_USER !== 'your_gmail@gmail.com') {
-    return nodemailer.createTransporter({
-      service: 'gmail',
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    return nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        pass: process.env.EMAIL_PASSWORD
       }
     });
   }
