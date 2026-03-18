@@ -39,7 +39,7 @@ const sendOTPEmail = async (email, phone, otp) => {
   }
 
   const mailOptions = {
-    from: process.env.EMAIL_FROM || `"FITTEX GYM" <${process.env.EMAIL_USER}>`,
+    from: process.env.EMAIL_FROM || `"FITTEX GYM" <udaykanojiya19@gmail.com>`,
     to: email,
     subject: 'Your FITTEX OTP Code',
     html: `

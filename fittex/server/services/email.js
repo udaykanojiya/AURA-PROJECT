@@ -31,7 +31,7 @@ const sendApprovalEmail = async (email, phone, member) => {
   }
   try {
     await transporter.sendMail({
-      from: `"FITTEX GYM" <${process.env.EMAIL_USER}>`,
+      from: `"FITTEX GYM" <${process.env.EMAIL_FROM || 'udaykanojiya19@gmail.com'}>`,
       to: email,
       subject: '🎉 Welcome to FITTEX GYM - Registration Approved!',
       html: `
