@@ -1,4 +1,5 @@
 const Member = require('../models/Member');
+const jwt = require('jsonwebtoken');
 
 // Middleware: Check if member is logged in
 const requireMemberAuth = async (req, res, next) => {
@@ -18,12 +19,29 @@ const requireMemberAuth = async (req, res, next) => {
   }
 };
 
-// Middleware: Check if admin is logged in
+// Middleware: Check if admin is logged in (supports both Session and JWT)
 const requireAdminAuth = (req, res, next) => {
-  if (!req.session || !req.session.isAdmin) {
-    return res.status(401).json({ success: false, message: 'Admin authentication required.' });
+  // 1. Try JWT from Authorization header
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fittex-super-secret-jwt-key-2026');
+      if (decoded.role === 'admin') {
+        req.admin = decoded;
+        return next();
+      }
+    } catch (err) {
+      // Token invalid, fall back to session
+    }
   }
-  next();
+
+  // 2. Fallback to Session
+  if (req.session && req.session.isAdmin) {
+    return next();
+  }
+
+  return res.status(401).json({ success: false, message: 'Admin authentication required.' });
 };
 
 module.exports = { requireMemberAuth, requireAdminAuth };

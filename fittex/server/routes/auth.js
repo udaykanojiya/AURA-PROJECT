@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sendOTP, verifyOTP } = require('../services/otpService');
+const jwt = require('jsonwebtoken');
 const GymSettings = require('../models/GymSettings');
 
 // POST /api/auth/send-otp
@@ -60,7 +61,23 @@ router.post('/admin-login', async (req, res) => {
 
     req.session.isAdmin = true;
     req.session.adminUsername = username;
-    res.json({ success: true, message: 'Admin login successful', data: { username, role: 'admin' } });
+    
+    // Generate JWT for Admin
+    const token = jwt.sign(
+      { username, role: 'admin' }, 
+      process.env.JWT_SECRET || 'fittex-super-secret-jwt-key-2026',
+      { expiresIn: '24h' }
+    );
+    
+    // Explicitly save session for backward compatibility, but primarily return the token
+    req.session.save((err) => {
+      res.json({ 
+        success: true, 
+        message: 'Admin login successful', 
+        token, // RETURN THE TOKEN TO FRONTEND
+        data: { username, role: 'admin' } 
+      });
+    });
   } catch (error) {
     console.error('Admin login error:', error);
     res.status(500).json({ success: false, message: 'Login failed' });
@@ -76,6 +93,21 @@ router.post('/logout', (req, res) => {
 
 // GET /api/auth/status
 router.get('/status', (req, res) => {
+  // 1. Check for JWT first (preferred)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fittex-super-secret-jwt-key-2026');
+      if (decoded.role === 'admin') {
+        return res.json({ role: 'admin', username: decoded.username });
+      }
+    } catch (err) {
+      // Token invalid, fall back to session
+    }
+  }
+
+  // 2. Fallback to existing session (for compatibility)
   if (req.session && req.session.isAdmin) {
     return res.json({ role: 'admin', username: req.session.adminUsername });
   }
