@@ -2,19 +2,31 @@ const nodemailer = require('nodemailer');
 
 // Create transporter
 const transporter = nodemailer.createTransport({
+  service: 'gmail', // Use 'gmail' service for better compatibility
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  port: 465, // Use SSL port 465 instead of 587
+  secure: true, // Use true for Port 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
+  },
+  connectionTimeout: 10000, // 10 seconds timeout
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
+  tls: {
+    rejectUnauthorized: false // Sometimes needed in cloud environments to bypass certificate issues
   }
 });
 
 // Send OTP Email
 const sendOTPEmail = async (email, phone, otp) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    console.error('❌ Email credentials (EMAIL_USER/EMAIL_PASSWORD) are missing in environment variables.');
+    return false;
+  }
+
   const mailOptions = {
-    from: process.env.EMAIL_FROM,
+    from: process.env.EMAIL_FROM || `"FITTEX GYM" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Your FITTEX OTP Code',
     html: `
@@ -25,7 +37,7 @@ const sendOTPEmail = async (email, phone, otp) => {
         <div style="padding: 20px; background: #f5f5f5;">
           <h3>Your OTP Code</h3>
           <p>Hello,</p>
-          <p>Your One-Time Password (OTP) for phone number <strong>${phone}</strong> is:</p>
+          <p>Your One-Time Password (OTP) for phone number <strong>${phone || 'your account'}</strong> is:</p>
           <div style="background: #0A0A0A; color: #BFFF00; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
             ${otp}
           </div>
@@ -42,10 +54,15 @@ const sendOTPEmail = async (email, phone, otp) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log('✅ OTP email sent to:', email);
+    console.log('✅ OTP email sent successfully to:', email);
     return true;
   } catch (error) {
-    console.error('❌ Email send failed:', error);
+    console.error('❌ Email send failed:', error.message);
+    if (error.code === 'ETIMEDOUT') {
+      console.error('💡 Hint: Connection timed out. This could be due to network restrictions on Port 465/587 or incorrect SMTP host.');
+    } else if (error.code === 'EAUTH') {
+      console.error('💡 Hint: SMTP Authentication failed. Check your EMAIL_USER and EMAIL_PASSWORD (use App Password for Gmail).');
+    }
     return false;
   }
 };
