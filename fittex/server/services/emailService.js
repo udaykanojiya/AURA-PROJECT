@@ -2,18 +2,13 @@ const nodemailer = require('nodemailer');
 
 // Create transporter
 const transporter = nodemailer.createTransport({
-  host: 'smtp.googlemail.com', // Alternative host
-  port: 587,
-  secure: false, // TLS
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+    user: process.env.SMTP_USER || process.env.EMAIL_USER,
+    pass: process.env.SMTP_PASS || process.env.EMAIL_PASSWORD
   },
-  family: 4, // Force IPv4 to bypass potential IPv6 routing issues on Render
-  debug: true,
-  logger: true,
-  connectionTimeout: 20000, 
-  greetingTimeout: 20000,
   tls: {
     rejectUnauthorized: false
   }
@@ -30,8 +25,11 @@ transporter.verify(function (error, success) {
 
 // Send OTP Email
 const sendOTPEmail = async (email, phone, otp) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-    console.error('❌ Email credentials (EMAIL_USER/EMAIL_PASSWORD) are missing in environment variables.');
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASSWORD;
+
+  if (!user || !pass) {
+    console.error('❌ Email credentials (SMTP_USER/SMTP_PASSWORD) are missing in environment variables.');
     return false;
   }
 

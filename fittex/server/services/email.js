@@ -1,19 +1,20 @@
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = process.env.SMTP_PORT || 587;
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASSWORD;
+
+  if (user && pass) {
     return nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      host: host,
+      port: port,
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
+        user: user,
+        pass: pass
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
       tls: {
         rejectUnauthorized: false
       }
