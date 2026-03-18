@@ -28,8 +28,8 @@ const seedGymSettings = async () => {
       bankName: 'State Bank of India',
       
       // Admin credentials
-      adminUsername: 'admin',
-      adminPassword: 'admin123'
+      adminUsername: process.env.ADMIN_USERNAME || 'admin',
+      adminPassword: process.env.ADMIN_PASSWORD || 'F!ttexAdmin#2026'
     });
 
     await settings.save();
