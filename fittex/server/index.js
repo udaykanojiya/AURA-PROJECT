@@ -60,8 +60,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Use Routes
-app.use('/api/auth', authRoutes);
+// Import Routes
+const authRoutes = require('./routes/auth');
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
 const memberRoutes = require('./routes/member');
