@@ -8,22 +8,30 @@ const app = express();
 
 // Middleware
 app.use(cors({ 
-  origin: function (origin, callback) {
-    // Allow all origins for debugging
-    callback(null, true);
-  }, 
+  origin: [
+    'https://aura-project-ashy.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
   credentials: true 
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Session middleware (required for admin and member auth)
+// Session configuration for cross-domain persistence
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (isProduction) {
+  app.set('trust proxy', 1); // Trust first proxy (Render)
+}
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fittex-super-secret-key-2024',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // set true in production with HTTPS
+    secure: isProduction, // Required for sameSite: 'none'
+    sameSite: isProduction ? 'none' : 'lax', // Required for cross-domain cookies
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
