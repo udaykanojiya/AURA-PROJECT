@@ -2,19 +2,26 @@ const nodemailer = require('nodemailer');
 
 // Create transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Use 'gmail' service for better compatibility
-  host: 'smtp.gmail.com',
-  port: 465, // Use SSL port 465 instead of 587
-  secure: true, // Use true for Port 465
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
   },
-  connectionTimeout: 10000, // 10 seconds timeout
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  debug: true, // Show SMTP traffic
+  logger: true, // Log SMTP traffic
+  connectionTimeout: 20000, 
+  greetingTimeout: 20000,
   tls: {
-    rejectUnauthorized: false // Sometimes needed in cloud environments to bypass certificate issues
+    rejectUnauthorized: false
+  }
+});
+
+// Verify connection configuration
+transporter.verify(function (error, success) {
+  if (error) {
+    console.error('❌ SMTP Transporter Verification Error:', error.message);
+  } else {
+    console.log('✅ SMTP Transporter is ready to send emails');
   }
 });
 
