@@ -31,9 +31,11 @@ const AdminDashboard = ({ setUser }) => {
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
+      localStorage.removeItem('adminToken'); // Clear JWT
       if (setUser) setUser(null);
       navigate('/admin-secret-panel');
     } catch (e) {
+      localStorage.removeItem('adminToken');
       navigate('/admin-secret-panel');
     }
   };

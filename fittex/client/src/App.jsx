@@ -60,10 +60,16 @@ function AppContent() {
 
   useEffect(() => {
     const checkAuthStatus = async () => {
+      // If we have a token, we should specify it or let the interceptor handle it
+      // The interceptor in api.js already adds it from localStorage
       try {
         const { data } = await api.get('/auth/status');
         setUser(data);
       } catch (err) {
+        // If status check fails, clear token if it was invalid
+        if (err.response?.status === 401) {
+          localStorage.removeItem('adminToken');
+        }
         setUser(null);
       }
     };

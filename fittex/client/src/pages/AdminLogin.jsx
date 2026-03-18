@@ -18,7 +18,12 @@ const AdminLogin = ({ setUser }) => {
       if (data.success) {
         toast.success(data.message);
         
-        // Use data directly from login response instead of second API call
+        // Save JWT to localStorage
+        if (data.token) {
+          localStorage.setItem('adminToken', data.token);
+        }
+        
+        // Use data directly from login response
         setUser(data.data);
         
         navigate('/admin/dashboard');

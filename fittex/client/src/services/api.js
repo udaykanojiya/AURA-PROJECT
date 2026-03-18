@@ -4,7 +4,18 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://aura-project-j0kh.onren
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true // IMPORTANT: sends session cookies
+  withCredentials: true // keep for sessions/members
+});
+
+// Add JWT to requests if it exists in localStorage
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('adminToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 export default api;
