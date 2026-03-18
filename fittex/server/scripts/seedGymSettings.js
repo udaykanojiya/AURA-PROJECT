@@ -4,7 +4,7 @@ const GymSettings = require('../models/GymSettings');
 
 const seedGymSettings = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fittex');
     console.log('Connected to MongoDB');
 
     // Clear existing settings
