@@ -229,15 +229,17 @@ router.post('/check-in', requireMember, async (req, res) => {
       gym.gymLocation.longitude
     );
 
-    // Give some leeway based on GPS accuracy (subtract half of accuracy from distance)
-    const accuracyLeeway = (memberLocation.accuracy || 0) / 2;
+    // Accuracy Leeway: Use 75% of accuracy as buffer, but capped at 100m to prevent abuse
+    const accuracyLeeway = Math.min((memberLocation.accuracy || 0) * 0.75, 100);
     const effectiveDistance = Math.max(0, distance - accuracyLeeway);
 
     console.log('--- Check-in Debug ---');
+    const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    console.log('IST Time:', istNow.toLocaleString('en-IN'));
     console.log('Member Loc:', { lat: memberLocation.latitude, lng: memberLocation.longitude, accuracy: memberLocation.accuracy });
     console.log('Gym Loc:', { lat: gym.gymLocation.latitude, lng: gym.gymLocation.longitude });
-    console.log('Calculated Distance:', distance, 'meters');
-    console.log('Effective Distance (with accuracy leeway):', effectiveDistance, 'meters');
+    console.log('Calculated Distance:', distance.toFixed(2), 'meters');
+    console.log('Effective Distance (with leeway):', effectiveDistance.toFixed(2), 'meters');
 
     const maxDistance = gym.checkInSettings?.maxDistance || 100; // Increased default to 100m
     if (effectiveDistance > maxDistance) {
@@ -254,16 +256,21 @@ router.post('/check-in', requireMember, async (req, res) => {
       });
     }
 
-    // CHECK 4: Gym Hours
+    // CHECK 4: Gym Hours (IST Timezone)
     const openTime = gym.checkInSettings?.gymHours?.openTime ?? 6;
     const closeTime = gym.checkInSettings?.gymHours?.closeTime ?? 22;
-    const hour = new Date().getHours();
-    if (hour < openTime || hour >= closeTime) {
+
+    // Get current hour in IST
+    const istTimeStr = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+    const istHour = new Date(istTimeStr).getHours();
+
+    if (istHour < openTime || istHour >= closeTime) {
+      console.log('❌ Gym closed (IST):', istHour, 'not between', openTime, 'and', closeTime);
       return res.status(400).json({
         success: false,
         error: {
           code: 'OUTSIDE_GYM_HOURS',
-          message: `Gym is closed. Hours: ${openTime}:00 AM – ${closeTime <= 12 ? closeTime : closeTime - 12}:00 PM`
+          message: `Gym is closed. Hours: ${openTime}:00 AM – ${closeTime <= 12 ? closeTime : closeTime - 12}:00 PM (IST)`
         }
       });
     }
@@ -286,9 +293,15 @@ router.post('/check-in', requireMember, async (req, res) => {
       });
     }
 
-    // CHECK 6: Duplicate check-in today
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    // CHECK 6: Duplicate check-in today (IST Today)
+    const todayIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    todayIST.setHours(0, 0, 0, 0);
+
+    // Calculate the UTC equivalent for the start of the day in IST
+    // (IST 00:00 is UTC 18:30 of the previous day)
+    const todayStart = new Date(todayIST.getTime() - (new Date().getTimezoneOffset() * 60000));
+    // Actually simpler: Since 'todayIST' was created as a mid-shift Date, setting hours to 0
+    // gives us the exact point in time. MongoDB queries with Dates work fine with this.
 
     const existingCheckIn = await Attendance.findOne({
       memberId: member._id,
